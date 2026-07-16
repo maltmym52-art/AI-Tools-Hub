@@ -745,7 +745,7 @@ export default function App() {
                     <span className="block text-2xl font-black bg-gradient-to-l from-cyan-400 to-violet-400 bg-clip-text text-transparent">{stat.value}</span>
                     <span className="text-xs text-zinc-500 mt-1 block">{stat.label}</span>
                   </div>
-                  <AdBanner containerId="container-05ad7fb8de8f3b8ef21624b307937bdd" scriptSrc="https://pl30389999.effectivecpmnetwork.com/05ad7fb8de8f3b8ef21624b307937bdd/invoke.js" />
+                  <AdBanner containerId="container-05ad7fb8de8f3b8ef21624b307937bdd" scriptSrc="https://pl30389999.effectivecpmnetwork.com/05ad7fb8de8f3b8ef21624b307937bdd/invoke.js"/>
                 ))}
               </div>
 
@@ -1201,7 +1201,6 @@ export default function App() {
                 <div className="text-xs text-zinc-500 text-right">
                   تم العثور على <span className="font-bold text-zinc-300">{filteredTools.length}</span> أداة ذكاء اصطناعي.
                 </div>
-                <AdBanner key={t.id} containerId="container-75f7a9850f479c1dcf7dbb2f723f0fe6" scriptSrc="https://pl30211052.effectivecpmnetwork.com/75f7a9850f479c1dcf7dbb2f723f0fe6/invoke.js" />
 
                 {/* Empty State */}
                 {filteredTools.length === 0 && (
