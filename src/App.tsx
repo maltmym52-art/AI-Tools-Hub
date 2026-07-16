@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import AdBanner from './components/AdBanner';
 import {
   PenTool,
   Image as ImageIcon,
@@ -39,6 +38,7 @@ import { TOOLS } from './data/tools';
 import { ARTICLES } from './data/articles';
 import { AITool, Category, Article } from './types';
 import { ProgressiveImage } from './components/ProgressiveImage';
+import { HomeAdBanner, ToolsAdBanner } from './components/AdBanners';
 
 // Dynamic Lucide icon helper
 import * as Icons from 'lucide-react';
@@ -745,11 +745,13 @@ export default function App() {
                     <span className="block text-2xl font-black bg-gradient-to-l from-cyan-400 to-violet-400 bg-clip-text text-transparent">{stat.value}</span>
                     <span className="text-xs text-zinc-500 mt-1 block">{stat.label}</span>
                   </div>
-                  <AdBanner containerId="container-05ad7fb8de8f3b8ef21624b307937bdd" scriptSrc="https://pl30389999.effectivecpmnetwork.com/05ad7fb8de8f3b8ef21624b307937bdd/invoke.js"/>
                 ))}
               </div>
 
             </div>
+
+            {/* Dynamic Home Ad Banner */}
+            <HomeAdBanner />
 
             {/* RAPID EXPLORATION BY CATEGORY */}
             <div className="space-y-6">
@@ -1015,6 +1017,9 @@ export default function App() {
                 تصفح واكتشف {TOOLS.length} أداة ذكية مصنفة، مع توفر خيارات التصفية السريعة والفرز والبحث الحي لمساعدتك في العثور على الأداة الأمثل لعملك.
               </p>
             </div>
+
+            {/* Dynamic Tools Ad Banner */}
+            <ToolsAdBanner />
 
             {/* Quick search & Filter triggers */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-900/40 p-4 rounded-2xl border border-zinc-900">
