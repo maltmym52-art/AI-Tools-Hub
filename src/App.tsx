@@ -1201,6 +1201,7 @@ export default function App() {
                 <div className="text-xs text-zinc-500 text-right">
                   تم العثور على <span className="font-bold text-zinc-300">{filteredTools.length}</span> أداة ذكاء اصطناعي.
                 </div>
+                <AdBanner key={t.id} containerId="container-75f7a9850f479c1dcf7dbb2f723f0fe6" scriptSrc="https://pl30211052.effectivecpmnetwork.com/75f7a9850f479c1dcf7dbb2f723f0fe6/invoke.js" />
 
                 {/* Empty State */}
                 {filteredTools.length === 0 && (
