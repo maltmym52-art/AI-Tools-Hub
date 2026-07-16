@@ -1,0 +1,6 @@
+{
+  "name": "AI Tools Hub",
+  "description": "دليل شامل وتفاعلي لأقوى أدوات وتقنيات الذكاء الاصطناعي مع مقارنات ومراجعات ومقالات سيو.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

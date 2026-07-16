@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemap location for search engines
+Sitemap: https://ai-tools-hub.com/sitemap.xml
