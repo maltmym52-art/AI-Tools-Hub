@@ -135,18 +135,35 @@ export default function App() {
     return ARTICLES.find(a => a.id === activeArticleId) || null;
   }, [activeArticleId]);
 
+  // Find Article Headings for Table of Contents
+  const articleHeadings = useMemo(() => {
+    if (!activeArticle) return [];
+    return activeArticle.content
+      .split('\n\n')
+      .map((paragraph, index) => {
+        if (paragraph.startsWith('### ')) {
+          return {
+            index,
+            text: paragraph.replace('### ', '').trim(),
+          };
+        }
+        return null;
+      })
+      .filter((h): h is { index: number; text: string } => h !== null);
+  }, [activeArticle]);
+
   // Dynamic Technical SEO and Structured Data injection
   useEffect(() => {
-    let title = 'AI Tools Hub | دليل أدوات الذكاء الاصطناعي الشامل لعام 2026';
+    let title = 'AI Tools Hub | دليل الذكاء الاصطناعي';
     let description = 'اكتشف أفضل أدوات الذكاء الاصطناعي المجانية والمدفوعة في مكان واحد. دليل شامل يضم تقييمات، مراجعات، ومقارنات حية لأدوات الكتابة والتصميم والبرمجة.';
-    let canonicalUrl = 'https://ai-tools-hub.com/';
+    let canonicalUrl = 'https://ai-tools-1hub.netlify.app/';
     let schema: any = null;
 
     if (activeTool) {
       // Individual Tool Page SEO
       title = `مراجعة شاملة لـ ${activeTool.arabicName} (${activeTool.name}) لعام 2026 | المميزات والعيوب والبدائل`;
       description = `اقرأ مراجعتنا الشاملة لأداة ${activeTool.arabicName} (${activeTool.name}). تعرف على أهم المميزات، الإيجابيات، السلبيات، خطط الأسعار والبدائل المتاحة.`;
-      canonicalUrl = `https://ai-tools-hub.com/tool/${activeTool.id}`;
+      canonicalUrl = `https://ai-tools-1hub.netlify.app/tool/${activeTool.id}`;
       
       // SoftwareApplication Schema with Review and Ratings
       schema = [
@@ -194,19 +211,19 @@ export default function App() {
               "@type": "ListItem",
               "position": 1,
               "name": "الرئيسية",
-              "item": "https://ai-tools-hub.com/"
+              "item": "https://ai-tools-1hub.netlify.app/"
             },
             {
               "@type": "ListItem",
               "position": 2,
               "name": "دليل الأدوات",
-              "item": "https://ai-tools-hub.com/directory"
+              "item": "https://ai-tools-1hub.netlify.app/directory"
             },
             {
               "@type": "ListItem",
               "position": 3,
               "name": activeTool.arabicName,
-              "item": `https://ai-tools-hub.com/tool/${activeTool.id}`
+              "item": `https://ai-tools-1hub.netlify.app/tool/${activeTool.id}`
             }
           ]
         }
@@ -215,7 +232,7 @@ export default function App() {
       // Individual Article Page SEO
       title = `${activeArticle.title} | مدونة الذكاء الاصطناعي`;
       description = activeArticle.summary;
-      canonicalUrl = `https://ai-tools-hub.com/article/${activeArticle.id}`;
+      canonicalUrl = `https://ai-tools-1hub.netlify.app/article/${activeArticle.id}`;
 
       // Article Schema
       schema = [
@@ -230,14 +247,14 @@ export default function App() {
             "@type": "Person",
             "name": "د. أميرة منصور",
             "jobTitle": "مستشارة وباحثة في الذكاء الاصطناعي",
-            "sameAs": "https://ai-tools-hub.com/reviewers"
+            "sameAs": "https://ai-tools-1hub.netlify.app/reviewers"
           },
           "publisher": {
             "@type": "Organization",
             "name": "AI Tools Hub",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://ai-tools-hub.com/logo.png"
+              "url": "https://ai-tools-1hub.netlify.app/logo.png"
             }
           },
           "mainEntityOfPage": {
@@ -253,19 +270,19 @@ export default function App() {
               "@type": "ListItem",
               "position": 1,
               "name": "الرئيسية",
-              "item": "https://ai-tools-hub.com/"
+              "item": "https://ai-tools-1hub.netlify.app/"
             },
             {
               "@type": "ListItem",
               "position": 2,
               "name": "المدونة",
-              "item": "https://ai-tools-hub.com/articles"
+              "item": "https://ai-tools-1hub.netlify.app/articles"
             },
             {
               "@type": "ListItem",
               "position": 3,
               "name": activeArticle.title,
-              "item": `https://ai-tools-hub.com/article/${activeArticle.id}`
+              "item": `https://ai-tools-1hub.netlify.app/article/${activeArticle.id}`
             }
           ]
         }
@@ -278,57 +295,57 @@ export default function App() {
             const catObj = CATEGORIES.find(c => c.id === selectedCategory);
             title = `دليل ${catObj ? catObj.name : 'أدوات الذكاء الاصطناعي'} الشامل لعام 2026`;
             description = `تصفح أفضل أدوات ومواقع ${catObj ? catObj.name : 'الذكاء الاصطناعي'} مع الفرز السريع والتقييم والبحث التلقائي باللغة العربية.`;
-            canonicalUrl = `https://ai-tools-hub.com/directory/${selectedCategory}`;
+            canonicalUrl = `https://ai-tools-1hub.netlify.app/directory/${selectedCategory}`;
           } else {
             title = 'دليل أدوات الذكاء الاصطناعي الشامل | تصفح أكثر من 50 أداة ذكية';
             description = 'قاعدة بيانات متكاملة ومصنفة لأقوى برمجيات ومواقع الذكاء الاصطناعي العالمية المخصصة لجميع المجالات والمهن.';
-            canonicalUrl = 'https://ai-tools-hub.com/directory';
+            canonicalUrl = 'https://ai-tools-1hub.netlify.app/directory';
           }
           break;
         case 'compare':
           title = 'مقارنة أدوات الذكاء الاصطناعي حياً | ChatGPT vs Claude vs Gemini';
           description = 'قارن بدقة بين 3 أدوات ذكاء اصطناعي في نفس الوقت. وازن بين الأسعار، المميزات، الإيجابيات، والسلبيات لاتخاذ القرار المناسب.';
-          canonicalUrl = 'https://ai-tools-hub.com/compare';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/compare';
           break;
         case 'best-of-month':
           title = 'أفضل أدوات الذكاء الاصطناعي الموصى بها لهذا الشهر | خيارات حصرية';
           description = 'قائمة متجددة شهرياً تضم أفضل الأدوات الحائزة على تقييمات استثنائية ونمو متسارع في مجالات التصميم والبرمجة والتسويق.';
-          canonicalUrl = 'https://ai-tools-hub.com/best-of-month';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/best-of-month';
           break;
         case 'articles':
           title = 'مدونة الذكاء الاصطناعي | مقالات، مقارنات، وأدلة تعليمية مفصلة';
           description = 'اقرأ أحدث المقالات والمراجعات الفنية حول الذكاء الاصطناعي لرفع كفاءتك والتعرف على مستجدات الثورة التقنية.';
-          canonicalUrl = 'https://ai-tools-hub.com/articles';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/articles';
           break;
         case 'favorites':
           title = 'مجموعتي المفضلة | أدوات الذكاء الاصطناعي الخاصة بي';
           description = 'قائمتك الشخصية المحفوظة من أفضل وأقوى أدوات الذكاء الاصطناعي لسهولة الوصول إليها في أي وقت.';
-          canonicalUrl = 'https://ai-tools-hub.com/favorites';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/favorites';
           break;
         case 'about':
           title = 'من نحن | قصة وأهداف منصة AI Tools Hub';
           description = 'تعرف على رسالتنا ورؤيتنا في إثراء المحتوى العربي التقني وتوفير دليل موثوق ومحايد لأدوات الذكاء الاصطناعي.';
-          canonicalUrl = 'https://ai-tools-hub.com/about';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/about';
           break;
         case 'privacy':
           title = 'سياسة الخصوصية | AI Tools Hub';
           description = 'سياسة خصوصية مستخدمي دليل أدوات الذكاء الاصطناعي وكيفية الحفاظ على سرية وحماية بياناتك الشخصية.';
-          canonicalUrl = 'https://ai-tools-hub.com/privacy';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/privacy';
           break;
         case 'terms':
           title = 'شروط وأحكام الاستخدام | AI Tools Hub';
           description = 'الشروط القانونية والتنظيمية الواجب اتباعها عند استخدام موقع دليل أدوات الذكاء الاصطناعي.';
-          canonicalUrl = 'https://ai-tools-hub.com/terms';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/terms';
           break;
         case 'contact':
           title = 'اتصل بنا | تواصل مباشرة مع فريق عمل AI Tools Hub';
           description = 'تواصل معنا لطرح استفساراتك، اقتراح إضافة أداة ذكية جديدة، أو الإعلان على منصتنا الرائدة.';
-          canonicalUrl = 'https://ai-tools-hub.com/contact';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/contact';
           break;
         case 'reviewers':
           title = 'فريق مراجعي الخبراء والـ E-E-A-T | معايير الموثوقية العالية لمراجعاتنا';
           description = 'تعرف على فريق مراجعي ومهندسي الذكاء الاصطناعي المسؤولين عن كتابة وتقييم الأدوات في منصتنا.';
-          canonicalUrl = 'https://ai-tools-hub.com/reviewers';
+          canonicalUrl = 'https://ai-tools-1hub.netlify.app/reviewers';
           break;
         default:
           break;
@@ -391,10 +408,10 @@ export default function App() {
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "AI Tools Hub",
-          "url": "https://ai-tools-hub.com/",
+          "url": "https://ai-tools-1hub.netlify.app/",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://ai-tools-hub.com/directory?q={search_term_string}",
+            "target": "https://ai-tools-1hub.netlify.app/directory?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         },
@@ -402,8 +419,8 @@ export default function App() {
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "AI Tools Hub",
-          "url": "https://ai-tools-hub.com/",
-          "logo": "https://ai-tools-hub.com/logo.png",
+          "url": "https://ai-tools-1hub.netlify.app/",
+          "logo": "https://ai-tools-1hub.netlify.app/logo.png",
           "description": "الدليل العربي الأكبر والأول لأدوات الذكاء الاصطناعي ومراجعاتها المفصلة.",
           "sameAs": [
             "https://twitter.com/AIToolsHub",
@@ -1626,6 +1643,7 @@ export default function App() {
               </div>
             )}
 
+            <HomeAdBanner />
           </div>
         )}
 
@@ -1730,6 +1748,7 @@ export default function App() {
               ))}
             </div>
 
+            <ToolsAdBanner />
           </div>
         )}
 
@@ -1794,13 +1813,44 @@ export default function App() {
                   {activeArticle.title}
                 </h1>
 
+                {/* Table of Contents (فهرس المحتوى) */}
+                {articleHeadings.length > 0 && (
+                  <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-5 md:p-6 text-right shadow-inner relative overflow-hidden my-4">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex items-center gap-2 mb-4 text-cyan-400 border-b border-zinc-900 pb-3">
+                      <Icons.List className="text-cyan-400" size={18} />
+                      <h4 className="text-sm font-bold text-zinc-100">فهرس المحتوى</h4>
+                    </div>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs sm:text-sm text-zinc-400">
+                      {articleHeadings.map((h, idx) => (
+                        <li key={idx} className="flex items-start">
+                          <a
+                            href={`#heading-${h.index}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const el = document.getElementById(`heading-${h.index}`);
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }}
+                            className="hover:text-cyan-300 hover:translate-x-[-4px] transition-all duration-200 inline-flex items-center gap-2 text-right cursor-pointer"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80 shrink-0 animate-pulse" />
+                            <span className="font-medium text-zinc-300 hover:text-cyan-300">{h.text}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Body Content with Cairo line height friendliness */}
                 <div className="text-zinc-300 text-sm sm:text-base leading-relaxed space-y-6 font-light">
                   {activeArticle.content.split('\n\n').map((paragraph, i) => {
                     // Check if paragraph is heading
                     if (paragraph.startsWith('### ')) {
                       return (
-                        <h3 key={i} className="text-lg sm:text-xl font-bold text-cyan-400 pt-4 border-r-2 border-cyan-500 pr-3">
+                        <h3 id={`heading-${i}`} key={i} className="text-lg sm:text-xl font-bold text-cyan-400 pt-4 border-r-2 border-cyan-500 pr-3 scroll-mt-28">
                           {paragraph.replace('### ', '')}
                         </h3>
                       );
@@ -1823,6 +1873,8 @@ export default function App() {
                     );
                   })}
                 </div>
+
+                <HomeAdBanner />
 
                 {/* Share bar at the bottom */}
                 <div className="pt-6 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
@@ -1917,6 +1969,7 @@ export default function App() {
                   ))}
                 </div>
 
+                <ToolsAdBanner />
               </div>
             )}
 
@@ -2007,6 +2060,7 @@ export default function App() {
               </div>
             )}
 
+            <HomeAdBanner />
           </div>
         )}
 

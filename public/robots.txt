@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /private/
 
 # Sitemap location for search engines
-Sitemap: https://ai-tools-hub.com/sitemap.xml
+Sitemap: https://ai-tools-1hub.netlify.app/sitemap.xml
