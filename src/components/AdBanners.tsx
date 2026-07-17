@@ -1,9 +1,10 @@
 import React from 'react';
 
-export function HomeAdBanner() {
+export function HomeAdBanner({ lang }: { lang?: 'ar' | 'en' }) {
+  const currentLang = lang || (typeof window !== 'undefined' ? (localStorage.getItem('lang') as 'ar' | 'en') : 'ar') || 'ar';
   const iframeSrcDoc = `
     <!DOCTYPE html>
-    <html lang="ar" dir="rtl">
+    <html lang="${currentLang}" dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,7 +40,7 @@ export function HomeAdBanner() {
     <div className="my-8 mx-auto w-full max-w-4xl text-center space-y-2">
       <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
         <span className="h-px w-8 bg-zinc-800"></span>
-        <span>إعـلان مـمـول / SPONSORED AD</span>
+        <span>{currentLang === 'ar' ? 'إعـلان مـمـول' : 'SPONSORED AD'}</span>
         <span className="h-px w-8 bg-zinc-800"></span>
       </div>
 
@@ -56,10 +57,11 @@ export function HomeAdBanner() {
   );
 }
 
-export function ToolsAdBanner() {
+export function ToolsAdBanner({ lang }: { lang?: 'ar' | 'en' }) {
+  const currentLang = lang || (typeof window !== 'undefined' ? (localStorage.getItem('lang') as 'ar' | 'en') : 'ar') || 'ar';
   const iframeSrcDoc = `
     <!DOCTYPE html>
-    <html lang="ar" dir="rtl">
+    <html lang="${currentLang}" dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -95,7 +97,7 @@ export function ToolsAdBanner() {
     <div className="my-8 mx-auto w-full max-w-4xl text-center space-y-2">
       <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
         <span className="h-px w-8 bg-zinc-800"></span>
-        <span>إعـلان مـمـول / SPONSORED AD</span>
+        <span>{currentLang === 'ar' ? 'إعـلان مـمـول' : 'SPONSORED AD'}</span>
         <span className="h-px w-8 bg-zinc-800"></span>
       </div>
 
