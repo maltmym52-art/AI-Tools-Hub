@@ -55,6 +55,50 @@ const LucideIcon = ({ name, className, size = 20 }: { name: string; className?: 
 
 type Tab = 'home' | 'directory' | 'compare' | 'best-of-month' | 'articles' | 'favorites' | 'about' | 'privacy' | 'terms' | 'contact' | 'reviewers';
 
+const parseInitialUrl = (): {
+  initialTab: Tab;
+  initialCategory: string | null;
+  initialToolId: string | null;
+  initialArticleId: string | null;
+} => {
+  const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+  let initialTab: Tab = 'home';
+  let initialCategory: string | null = null;
+  let initialToolId: string | null = null;
+  let initialArticleId: string | null = null;
+
+  if (path === '/directory') {
+    initialTab = 'directory';
+  } else if (path.startsWith('/directory/')) {
+    initialTab = 'directory';
+    initialCategory = path.replace('/directory/', '');
+  } else if (path === '/compare') {
+    initialTab = 'compare';
+  } else if (path === '/best-of-month') {
+    initialTab = 'best-of-month';
+  } else if (path === '/articles' || path === '/blog') {
+    initialTab = 'articles';
+  } else if (path === '/about') {
+    initialTab = 'about';
+  } else if (path === '/privacy') {
+    initialTab = 'privacy';
+  } else if (path === '/terms') {
+    initialTab = 'terms';
+  } else if (path === '/contact') {
+    initialTab = 'contact';
+  } else if (path === '/reviewers') {
+    initialTab = 'reviewers';
+  } else if (path.startsWith('/tool/')) {
+    initialTab = 'directory';
+    initialToolId = path.replace('/tool/', '');
+  } else if (path.startsWith('/article/')) {
+    initialTab = 'articles';
+    initialArticleId = path.replace('/article/', '');
+  }
+
+  return { initialTab, initialCategory, initialToolId, initialArticleId };
+};
+
 export default function App() {
   // Language toggle state
   const [lang, setLang] = useState<'ar' | 'en'>(() => {
@@ -100,12 +144,15 @@ export default function App() {
     });
   }, [lang]);
 
+  // Initial parsed URL states
+  const urlParams = useMemo(() => parseInitialUrl(), []);
+
   // Tabs navigation
-  const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [activeTab, setActiveTab] = useState<Tab>(urlParams.initialTab);
   
   // Searching & Filtering
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(urlParams.initialCategory);
   const [selectedPriceType, setSelectedPriceType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'alpha'>('popular');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -117,10 +164,10 @@ export default function App() {
   });
 
   // Modal Detail Tool
-  const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const [activeToolId, setActiveToolId] = useState<string | null>(urlParams.initialToolId);
 
   // Active Article reader
-  const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
+  const [activeArticleId, setActiveArticleId] = useState<string | null>(urlParams.initialArticleId);
 
   // User Interactive Ratings persisted in localStorage
   const [userRatings, setUserRatings] = useState<Record<string, number>>(() => {
@@ -174,6 +221,38 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('ai_hub_ratings', JSON.stringify(userRatings));
   }, [userRatings]);
+
+  // Handle browser back/forward buttons (history popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const { initialTab, initialCategory, initialToolId, initialArticleId } = parseInitialUrl();
+      setActiveTab(initialTab);
+      setSelectedCategory(initialCategory);
+      setActiveToolId(initialToolId);
+      setActiveArticleId(initialArticleId);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL path dynamically based on state
+  useEffect(() => {
+    let newPath = '/';
+    if (activeToolId) {
+      newPath = `/tool/${activeToolId}`;
+    } else if (activeArticleId) {
+      newPath = `/article/${activeArticleId}`;
+    } else if (activeTab === 'directory') {
+      newPath = selectedCategory ? `/directory/${selectedCategory}` : '/directory';
+    } else if (activeTab !== 'home') {
+      newPath = `/${activeTab}`;
+    }
+
+    if (window.location.pathname !== newPath) {
+      window.history.pushState(null, '', newPath);
+    }
+  }, [activeTab, selectedCategory, activeToolId, activeArticleId]);
 
   // Find Tool Details
   const activeTool = useMemo(() => {
@@ -484,6 +563,30 @@ export default function App() {
     }
     metaDesc.setAttribute('content', description);
 
+    // Meta keywords
+    let keywords = '';
+    if (activeTool) {
+      keywords = lang === 'ar' 
+        ? `${activeTool.arabicName}, ${activeTool.name}, مراجعة ${activeTool.arabicName}, دليل أدوات الذكاء الاصطناعي, بدائل ${activeTool.arabicName}, ميزات ${activeTool.name}`
+        : `${activeTool.name}, ${activeTool.arabicName}, review ${activeTool.name}, AI tool review, alternatives to ${activeTool.name}`;
+    } else if (activeArticle) {
+      keywords = lang === 'ar'
+        ? `${activeArticle.title}, مدونة ذكاء اصطناعي, شروحات ذكاء اصطناعي, ${activeArticle.category}`
+        : `${activeArticle.title}, AI blog, AI tutorials, ${activeArticle.category}`;
+    } else {
+      keywords = lang === 'ar'
+        ? 'ذكاء اصطناعي, أدوات ذكاء اصطناعي, دليل ذكاء اصطناعي, برامج ذكاء اصطناعي, توليد صور بالذكاء الاصطناعي, توليد فيديو بالذكاء الاصطناعي, كتابة بالذكاء الاصطناعي, تصميم بالذكاء الاصطناعي, مواقع ذكاء اصطناعي مجانية, مقارنة ادوات الذكاء الاصطناعي'
+        : 'ai tools, artificial intelligence, ai directory, best ai websites, free ai writing, ai image generator, ai tools review, chatgpt, midjourney';
+    }
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
     // OpenGraph Title
     let ogTitle = document.querySelector('meta[property="og:title"]');
     if (!ogTitle) {
@@ -501,6 +604,44 @@ export default function App() {
       document.head.appendChild(ogDesc);
     }
     ogDesc.setAttribute('content', description);
+
+    // Dynamic OG and Twitter Image
+    let imageUrl = 'https://ai-tools-1hub.netlify.app/logo.png';
+    if (activeArticle && activeArticle.imageUrl) {
+      imageUrl = activeArticle.imageUrl;
+    }
+
+    let ogImage = document.querySelector('meta[property="og:image"]');
+    if (!ogImage) {
+      ogImage = document.createElement('meta');
+      ogImage.setAttribute('property', 'og:image');
+      document.head.appendChild(ogImage);
+    }
+    ogImage.setAttribute('content', imageUrl);
+
+    let twitterTitle = document.querySelector('meta[property="twitter:title"]');
+    if (!twitterTitle) {
+      twitterTitle = document.createElement('meta');
+      twitterTitle.setAttribute('property', 'twitter:title');
+      document.head.appendChild(twitterTitle);
+    }
+    twitterTitle.setAttribute('content', title);
+
+    let twitterDesc = document.querySelector('meta[property="twitter:description"]');
+    if (!twitterDesc) {
+      twitterDesc = document.createElement('meta');
+      twitterDesc.setAttribute('property', 'twitter:description');
+      document.head.appendChild(twitterDesc);
+    }
+    twitterDesc.setAttribute('content', description);
+
+    let twitterImage = document.querySelector('meta[property="twitter:image"]');
+    if (!twitterImage) {
+      twitterImage = document.createElement('meta');
+      twitterImage.setAttribute('property', 'twitter:image');
+      document.head.appendChild(twitterImage);
+    }
+    twitterImage.setAttribute('content', imageUrl);
 
     // Canonical link
     let canonicalLink = document.querySelector('link[rel="canonical"]');
@@ -764,15 +905,17 @@ export default function App() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {[
-              { id: 'home', label: t('nav_home') },
-              { id: 'directory', label: t('nav_directory') },
-              { id: 'compare', label: t('nav_compare') },
-              { id: 'best-of-month', label: t('nav_best_month') },
-              { id: 'articles', label: t('nav_blog') },
+              { id: 'home', path: '/', label: t('nav_home') },
+              { id: 'directory', path: '/directory', label: t('nav_directory') },
+              { id: 'compare', path: '/compare', label: t('nav_compare') },
+              { id: 'best-of-month', path: '/best-of-month', label: t('nav_best_month') },
+              { id: 'articles', path: '/articles', label: t('nav_blog') },
             ].map(item => (
-              <button
+              <a
                 key={item.id}
-                onClick={() => {
+                href={item.path}
+                onClick={(e) => {
+                  e.preventDefault();
                   setActiveTab(item.id as Tab);
                   setActiveArticleId(null);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -784,7 +927,7 @@ export default function App() {
                 }`}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
           </nav>
 
@@ -801,13 +944,15 @@ export default function App() {
             </button>
 
             {/* Favorites Badge */}
-            <button
-              onClick={() => {
+            <a
+              href="/favorites"
+              onClick={(e) => {
+                e.preventDefault();
                 setActiveTab('favorites');
                 setActiveArticleId(null);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`relative p-2.5 rounded-xl border transition-all duration-200 ${
+              className={`relative p-2.5 rounded-xl border transition-all duration-200 block ${
                 activeTab === 'favorites'
                   ? 'bg-rose-950/40 text-rose-400 border-rose-900/50'
                   : 'bg-zinc-900/40 text-zinc-400 border-zinc-800/80 hover:text-rose-400 hover:bg-zinc-900'
@@ -820,7 +965,7 @@ export default function App() {
                   {favorites.length}
                 </span>
               )}
-            </button>
+            </a>
 
             {/* Mobile Menu Button */}
             <button
@@ -843,29 +988,31 @@ export default function App() {
               className="absolute top-20 left-0 right-0 bg-zinc-950 border-b border-zinc-900 px-4 py-4 flex flex-col gap-2 md:hidden z-50 shadow-2xl"
             >
               {[
-                { id: 'home', label: t('nav_home') },
-                { id: 'directory', label: t('nav_directory') },
-                { id: 'compare', label: t('nav_compare') },
-                { id: 'best-of-month', label: t('nav_best_month') },
-                { id: 'articles', label: t('nav_blog') },
-                { id: 'favorites', label: t('nav_favorites') },
+                { id: 'home', path: '/', label: t('nav_home') },
+                { id: 'directory', path: '/directory', label: t('nav_directory') },
+                { id: 'compare', path: '/compare', label: t('nav_compare') },
+                { id: 'best-of-month', path: '/best-of-month', label: t('nav_best_month') },
+                { id: 'articles', path: '/articles', label: t('nav_blog') },
+                { id: 'favorites', path: '/favorites', label: t('nav_favorites') },
               ].map(item => (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => {
+                  href={item.path}
+                  onClick={(e) => {
+                    e.preventDefault();
                     setActiveTab(item.id as Tab);
                     setActiveArticleId(null);
                     setMobileMenuOpen(false);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`w-full text-right px-4 py-3 rounded-xl font-medium text-sm transition-all ${
+                  className={`w-full text-right px-4 py-3 rounded-xl font-medium text-sm transition-all block ${
                     activeTab === item.id && !activeArticleId
                       ? 'bg-zinc-900 text-cyan-400 border border-zinc-800'
                       : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-100'
                   }`}
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
             </motion.div>
           )}
@@ -2938,13 +3085,17 @@ export default function App() {
               </h5>
               <div className="flex flex-col gap-1.5 text-xs text-zinc-500">
                 {translatedCategories.slice(0, 4).map(cat => (
-                  <button
+                  <a
                     key={cat.id}
-                    onClick={() => handleCategorySelect(cat.id)}
-                    className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none"
+                    href={`/directory/${cat.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCategorySelect(cat.id);
+                    }}
+                    className="hover:text-cyan-400 rtl:text-right ltr:text-left"
                   >
                     {cat.name}
-                  </button>
+                  </a>
                 ))}
               </div>
             </div>
@@ -2955,13 +3106,13 @@ export default function App() {
                 {lang === 'ar' ? 'وصلات سريعة' : 'Quick Navigation'}
               </h5>
               <div className="flex flex-col gap-1.5 text-xs text-zinc-500">
-                <button onClick={() => { setActiveTab('home'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'الرئيسية' : 'Home'}</button>
-                <button onClick={() => { setActiveTab('directory'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'دليل الأدوات' : 'Tools Directory'}</button>
-                <button onClick={() => { setActiveTab('compare'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'مقارنة الأدوات' : 'Compare Tools'}</button>
-                <button onClick={() => { setActiveTab('best-of-month'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'أفضل أدوات الشهر' : 'Best of Month'}</button>
-                <button onClick={() => { setActiveTab('about'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'من نحن' : 'About Us'}</button>
-                <button onClick={() => { setActiveTab('reviewers'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'فريق الخبراء (E-E-A-T)' : 'Expert Reviewers (E-E-A-T)'}</button>
-                <button onClick={() => { setActiveTab('contact'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'اتصل بنا' : 'Contact Us'}</button>
+                <a href="/" onClick={(e) => { e.preventDefault(); setActiveTab('home'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'الرئيسية' : 'Home'}</a>
+                <a href="/directory" onClick={(e) => { e.preventDefault(); setActiveTab('directory'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'دليل الأدوات' : 'Tools Directory'}</a>
+                <a href="/compare" onClick={(e) => { e.preventDefault(); setActiveTab('compare'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'مقارنة الأدوات' : 'Compare Tools'}</a>
+                <a href="/best-of-month" onClick={(e) => { e.preventDefault(); setActiveTab('best-of-month'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'أفضل أدوات الشهر' : 'Best of Month'}</a>
+                <a href="/about" onClick={(e) => { e.preventDefault(); setActiveTab('about'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'من نحن' : 'About Us'}</a>
+                <a href="/reviewers" onClick={(e) => { e.preventDefault(); setActiveTab('reviewers'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'فريق الخبراء (E-E-A-T)' : 'Expert Reviewers (E-E-A-T)'}</a>
+                <a href="/contact" onClick={(e) => { e.preventDefault(); setActiveTab('contact'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-cyan-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'اتصل بنا' : 'Contact Us'}</a>
               </div>
             </div>
 
@@ -2975,8 +3126,8 @@ export default function App() {
                 : `All Rights Reserved © ${currentYear} AI Tools Hub`}
             </span>
             <div className="flex items-center gap-4">
-              <button onClick={() => { setActiveTab('privacy'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-zinc-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}</button>
-              <button onClick={() => { setActiveTab('terms'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-zinc-400 rtl:text-right ltr:text-left focus:outline-none">{lang === 'ar' ? 'شروط الاستخدام' : 'Terms of Use'}</button>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); setActiveTab('privacy'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-zinc-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); setActiveTab('terms'); setActiveArticleId(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-zinc-400 rtl:text-right ltr:text-left">{lang === 'ar' ? 'شروط الاستخدام' : 'Terms of Use'}</a>
             </div>
           </div>
 
