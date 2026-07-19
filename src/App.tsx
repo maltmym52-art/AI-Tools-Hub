@@ -178,6 +178,16 @@ export default function App() {
   // Rated success flash messages
   const [ratedFlash, setRatedFlash] = useState<string | null>(null);
 
+  // Adsterra Smartlink redirection states
+  const [redirectingTool, setRedirectingTool] = useState<{ id: string; name: string; websiteUrl: string } | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
+
+  const handleVisitWebsite = (e: React.MouseEvent, toolId: string, websiteUrl: string, toolName: string) => {
+    e.preventDefault();
+    setRedirectingTool({ id: toolId, name: toolName, websiteUrl });
+    setRedirectCountdown(5);
+  };
+
   // Compare Tool selection (IDs)
   const [compareTools, setCompareTools] = useState<string[]>([]);
   const [compareSearch, setCompareSearch] = useState('');
@@ -221,6 +231,20 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('ai_hub_ratings', JSON.stringify(userRatings));
   }, [userRatings]);
+
+  // Adsterra Smartlink countdown and auto-redirect
+  useEffect(() => {
+    if (!redirectingTool) return;
+    if (redirectCountdown <= 0) {
+      window.open(redirectingTool.websiteUrl, '_blank', 'noopener,noreferrer');
+      setRedirectingTool(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown(prev => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectingTool, redirectCountdown]);
 
   // Handle browser back/forward buttons (history popstate)
   useEffect(() => {
@@ -2044,15 +2068,13 @@ export default function App() {
                               >
                                 {lang === 'ar' ? 'عرض المراجعة الشاملة' : 'View Full Review'}
                               </button>
-                              <a
-                                href={t?.websiteUrl}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                onClick={(e) => handleVisitWebsite(e, id, t?.websiteUrl || '', t?.name || '')}
                                 className="w-full bg-cyan-500 hover:bg-cyan-600 text-zinc-950 font-black text-xs py-2 rounded-xl transition-all block text-center flex items-center justify-center gap-1 focus:outline-none"
                               >
                                 {lang === 'ar' ? 'زيارة الموقع الرسمي' : 'Visit Official Website'}
                                 <ExternalLink size={12} />
-                              </a>
+                              </button>
                             </td>
                           );
                         })}
@@ -2160,15 +2182,13 @@ export default function App() {
                     >
                       {t('view_review_cons')}
                     </button>
-                    <a
-                      href={tool.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      onClick={(e) => handleVisitWebsite(e, tool.id, tool.websiteUrl, tool.name)}
                       className="bg-cyan-500 hover:bg-cyan-600 text-zinc-950 font-black text-xs py-3 px-6 rounded-xl transition-all text-center flex items-center justify-center gap-1 focus:outline-none"
                     >
                       {t('visit_tool_website')}
                       <ExternalLink size={12} />
-                    </a>
+                    </button>
                   </div>
 
                 </div>
@@ -3223,15 +3243,13 @@ export default function App() {
 
                   {/* Primary Call to Action buttons */}
                   <div className="space-y-2.5">
-                    <a
-                      href={activeTool.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      onClick={(e) => handleVisitWebsite(e, activeTool.id, activeTool.websiteUrl, activeTool.name)}
                       className="bg-cyan-500 hover:bg-cyan-600 text-zinc-950 font-black text-sm py-3 px-4 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 w-full shadow-lg focus:outline-none"
                     >
                       {t('visit_tool_website')}
                       <ExternalLink size={16} />
-                    </a>
+                    </button>
                     
                     <button
                       onClick={() => toggleFavorite(activeTool.id)}
@@ -3497,6 +3515,128 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Redirection / Adsterra Smartlink Modal */}
+        {redirectingTool && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 sm:p-8 max-w-md w-full relative overflow-hidden shadow-2xl space-y-6 text-center"
+            >
+              {/* Top ambient glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Close Button */}
+              <button
+                onClick={() => setRedirectingTool(null)}
+                className="absolute top-4 right-4 p-2 bg-zinc-900 hover:bg-zinc-850 rounded-full text-zinc-500 hover:text-zinc-200 transition-all focus:outline-none"
+              >
+                <X size={16} />
+              </button>
+
+              {/* Icon & Status */}
+              <div className="flex flex-col items-center space-y-3">
+                <div className="h-16 w-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center animate-pulse">
+                  <Sparkles className="text-cyan-400 animate-spin" size={28} />
+                </div>
+                <h3 className="font-extrabold text-lg text-zinc-100">
+                  {lang === 'ar' ? 'جاري تجهيز الرابط الآمن...' : 'Preparing Secure Link...'}
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-xs font-light">
+                  {lang === 'ar' 
+                    ? `جاري فحص وتوليد الرابط المباشر لأداة "${redirectingTool.name}".`
+                    : `Scanning and generating direct link for "${redirectingTool.name}".`
+                  }
+                </p>
+              </div>
+
+              {/* Progress bar / countdown display */}
+              <div className="space-y-2">
+                <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 5, ease: 'linear' }}
+                    className="bg-gradient-to-l from-cyan-400 to-indigo-500 h-full rounded-full" 
+                  />
+                </div>
+                <span className="text-[11px] font-mono text-cyan-400 block">
+                  {lang === 'ar' ? `سيتم تحويلك تلقائياً خلال ${redirectCountdown} ثوانٍ...` : `Auto-redirecting in ${redirectCountdown} seconds...`}
+                </span>
+              </div>
+
+              {/* HIGH CONVERTING SMARTLINK CTA BUTTONS */}
+              <div className="space-y-3">
+                
+                {/* primary Smartlink Button 1: Download PDF Guide */}
+                <a
+                  href="https://www.effectivecpmnetwork.com/men1nu2j?key=e2193a63b31700cf7dd7c7f5e04d7b51"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    // Also open official website immediately after clicking smartlink so they still get what they want
+                    setTimeout(() => {
+                      window.open(redirectingTool.websiteUrl, '_blank', 'noopener,noreferrer');
+                      setRedirectingTool(null);
+                    }, 500);
+                  }}
+                  className="relative group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-zinc-950 font-extrabold text-xs py-3.5 px-4 rounded-xl transition-all text-center flex items-center justify-center gap-2 w-full shadow-lg shadow-amber-500/10 focus:outline-none overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                  <span className="animate-bounce">📥</span>
+                  <span>
+                    {lang === 'ar' 
+                      ? 'تحميل دليل أدوات الذكاء الاصطناعي 2026 مجاناً (PDF)'
+                      : 'Download AI Tools Guide 2026 (Free PDF)'
+                    }
+                  </span>
+                </a>
+
+                {/* primary Smartlink Button 2: Skip Waiting / Instant Direct URL */}
+                <a
+                  href="https://www.effectivecpmnetwork.com/men1nu2j?key=e2193a63b31700cf7dd7c7f5e04d7b51"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    setTimeout(() => {
+                      window.open(redirectingTool.websiteUrl, '_blank', 'noopener,noreferrer');
+                      setRedirectingTool(null);
+                    }, 500);
+                  }}
+                  className="bg-gradient-to-r from-cyan-400 to-teal-400 hover:from-cyan-500 hover:to-teal-500 text-zinc-950 font-black text-xs py-3 px-4 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 w-full shadow-lg focus:outline-none"
+                >
+                  <span>🚀</span>
+                  <span>
+                    {lang === 'ar' 
+                      ? 'اضغط هنا للانتقال السريع والآمن فـوراً (تخطي)'
+                      : 'Click Here for Secure Instant Redirect (Skip Wait)'
+                    }
+                  </span>
+                </a>
+
+              </div>
+
+              {/* Secondary Option: Manual Official Link (Forces countdown skip) */}
+              <button
+                onClick={() => {
+                  window.open(redirectingTool.websiteUrl, '_blank', 'noopener,noreferrer');
+                  setRedirectingTool(null);
+                }}
+                className="text-xs text-zinc-500 hover:text-zinc-300 underline font-light focus:outline-none pt-2"
+              >
+                {lang === 'ar' ? 'الذهاب مباشرة للموقع الرسمي للمطورين' : 'Go directly to developer website'}
+              </button>
 
             </motion.div>
           </motion.div>
